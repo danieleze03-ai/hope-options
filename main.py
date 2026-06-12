@@ -2,12 +2,14 @@
 # HOPE OPTIONS — Main Loop
 # Runs signal checks every 30 seconds, tracks results,
 # sends daily report at end of day, runs Telegram bot
+# Includes lightweight HTTP server for Render keep-alive pings
 # ============================================================
 
 import sys
 import os
 import asyncio
 from datetime import datetime, timezone
+from aiohttp import web
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from signals.signal_engine import run_all_pairs
@@ -16,6 +18,7 @@ from tracker.result_tracker import track_signal
 from tracker.performance import get_today_stats
 
 CHECK_INTERVAL = 30  # seconds
+PORT = int(os.environ.get("PORT", 8080))
 
 # Tracks the UTC date we last sent a daily report for
 _last_report_date = None
@@ -64,8 +67,24 @@ async def _check_daily_report():
             print(f"[Main] Daily report sent for {today}")
 
 
+# ── Keep-alive HTTP server (for Render free tier + UptimeRobot) ──
+
+async def ping(request):
+    return web.Response(text="Hope Options is alive ✅")
+
+
+async def start_web_server():
+    app = web.Application()
+    app.router.add_get("/", ping)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", PORT)
+    await site.start()
+    print(f"[Main] Keep-alive web server running on port {PORT}")
+
+
 async def main():
-    """Run the Telegram bot (commands) and signal loop together."""
+    """Run the Telegram bot (commands), keep-alive server, and signal loop together."""
     app = build_app()
 
     # Start Telegram bot polling in the background
@@ -74,6 +93,9 @@ async def main():
     await app.updater.start_polling()
 
     print("[Main] Telegram bot polling started.")
+
+    # Start keep-alive web server
+    await start_web_server()
 
     try:
         await signal_loop()
