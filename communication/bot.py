@@ -60,6 +60,9 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Commands:\n"
         "/status — Check bot status\n"
         "/accuracy — Today's win rate\n"
+        "/weekly — Last 7 days stats\n"
+        "/monthly — Last 30 days stats\n"
+        "/history — Last 10 trades\n"
         "/pairs — Active pairs\n",
         parse_mode="Markdown"
     )
@@ -78,6 +81,27 @@ async def cmd_accuracy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(msg, parse_mode="Markdown")
 
 
+async def cmd_weekly(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    from tracker.performance import get_weekly_stats, format_stats_message
+    stats = get_weekly_stats()
+    msg = format_stats_message(stats)
+    await update.message.reply_text(msg, parse_mode="Markdown")
+
+
+async def cmd_monthly(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    from tracker.performance import get_monthly_stats, format_stats_message
+    stats = get_monthly_stats()
+    msg = format_stats_message(stats)
+    await update.message.reply_text(msg, parse_mode="Markdown")
+
+
+async def cmd_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    from tracker.performance import get_last_n_trades, format_history_message
+    trades = get_last_n_trades(10)
+    msg = format_history_message(trades)
+    await update.message.reply_text(msg, parse_mode="Markdown")
+
+
 async def cmd_pairs(update: Update, context: ContextTypes.DEFAULT_TYPE):
     pairs_text = "\n".join([f"• {p}" for p in ACTIVE_PAIRS])
     await update.message.reply_text(
@@ -92,6 +116,9 @@ def build_app():
     app.add_handler(CommandHandler("start",    cmd_start))
     app.add_handler(CommandHandler("status",   cmd_status))
     app.add_handler(CommandHandler("accuracy", cmd_accuracy))
+    app.add_handler(CommandHandler("weekly",   cmd_weekly))
+    app.add_handler(CommandHandler("monthly",  cmd_monthly))
+    app.add_handler(CommandHandler("history",  cmd_history))
     app.add_handler(CommandHandler("pairs",    cmd_pairs))
     return app
 
