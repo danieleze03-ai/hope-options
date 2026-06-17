@@ -2,7 +2,7 @@
 # HOPE OPTIONS — Main Loop
 # Runs signal checks every 30 seconds, tracks results,
 # sends daily report at end of day, runs Telegram bot
-# Includes lightweight HTTP server for Render keep-alive pings
+# FastAPI serves dashboard + API on the single public port
 # ============================================================
 
 import sys
@@ -10,7 +10,6 @@ import os
 import asyncio
 import time
 from datetime import datetime, timezone
-from aiohttp import web
 import uvicorn
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -18,12 +17,20 @@ from signals.signal_engine import run_all_pairs
 from communication.bot import send_signal, send_daily_report, build_app
 from tracker.result_tracker import track_signal
 from tracker.performance import get_today_stats
+from api.api import app as fastapi_app
+from fastapi.responses import PlainTextResponse
 
 CHECK_INTERVAL = 30  # seconds
 PORT = int(os.environ.get("PORT", 8080))
 
 # Tracks the UTC date we last sent a daily report for
 _last_report_date = None
+
+
+# ── Add ping route to FastAPI (replaces aiohttp keep-alive) ──
+@fastapi_app.get("/")
+async def ping():
+    return PlainTextResponse("Hope Options is alive ✅")
 
 
 async def signal_loop():
@@ -40,10 +47,7 @@ async def signal_loop():
                 print(f"[Main] SIGNAL: {signal['pair']} {signal['direction']} "
                       f"(score {signal['score']}/100)")
 
-                # Send signal to Telegram
                 await send_signal(signal)
-
-                # Start async result tracker (doesn't block loop)
                 asyncio.create_task(track_signal(signal))
 
             await _check_daily_report()
@@ -69,46 +73,21 @@ async def _check_daily_report():
             print(f"[Main] Daily report sent for {today}")
 
 
-# ── Keep-alive HTTP server (for Render free tier + UptimeRobot) ──
-
-async def ping(request):
-    return web.Response(text="Hope Options is alive ✅")
-
-
-async def start_web_server():
-    app = web.Application()
-    app.router.add_get("/", ping)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", PORT)
-    await site.start()
-    print(f"[Main] Keep-alive web server running on port {PORT}")
-
-
-async def start_dashboard_api():
-    """Start FastAPI dashboard on port 8081 inside the existing event loop."""
-    cfg = uvicorn.Config("api.api:app", host="0.0.0.0", port=8081, log_level="warning")
-    server = uvicorn.Server(cfg)
-    await server.serve()
-
-
 async def main():
-    """Run the Telegram bot (commands), keep-alive server, and signal loop together."""
+    """Run Telegram bot, FastAPI server, and signal loop together."""
     app = build_app()
 
     # Start Telegram bot polling in the background
     await app.initialize()
     await app.start()
     await app.updater.start_polling()
-
     print("[Main] Telegram bot polling started.")
 
-    # Start keep-alive web server
-    await start_web_server()
-
-    # Start FastAPI dashboard API on port 8081 (non-blocking background task)
-    asyncio.create_task(start_dashboard_api())
-    print("[Main] Dashboard API starting on port 8081")
+    # Start FastAPI on the single public port (replaces aiohttp server)
+    cfg = uvicorn.Config(fastapi_app, host="0.0.0.0", port=PORT, log_level="warning")
+    server = uvicorn.Server(cfg)
+    asyncio.create_task(server.serve())
+    print(f"[Main] FastAPI dashboard running on port {PORT}")
 
     try:
         await signal_loop()
