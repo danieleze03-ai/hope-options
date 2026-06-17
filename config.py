@@ -8,10 +8,12 @@ PAIRS = {
     "GBPUSD": "GBPUSD=X",
     "USDJPY": "USDJPY=X",
     "EURJPY": "EURJPY=X",
+    "GBPJPY": "GBPJPY=X",
+    "AUDUSD": "AUDUSD=X",
 }
 
-# Active pairs to trade (start with just 2)
-ACTIVE_PAIRS = ["EURUSD", "GBPUSD"]
+# Active pairs to trade
+ACTIVE_PAIRS = ["EURUSD", "GBPUSD", "USDJPY", "EURJPY", "GBPJPY", "AUDUSD"]
 
 # Timeframes — yfinance format
 PRIMARY_TF  = "5m"
