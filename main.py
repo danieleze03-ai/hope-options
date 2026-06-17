@@ -11,6 +11,7 @@ import asyncio
 import time
 from datetime import datetime, timezone
 from aiohttp import web
+import uvicorn
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from signals.signal_engine import run_all_pairs
@@ -84,6 +85,13 @@ async def start_web_server():
     print(f"[Main] Keep-alive web server running on port {PORT}")
 
 
+async def start_dashboard_api():
+    """Start FastAPI dashboard on port 8081 inside the existing event loop."""
+    cfg = uvicorn.Config("api.api:app", host="0.0.0.0", port=8081, log_level="warning")
+    server = uvicorn.Server(cfg)
+    await server.serve()
+
+
 async def main():
     """Run the Telegram bot (commands), keep-alive server, and signal loop together."""
     app = build_app()
@@ -97,6 +105,10 @@ async def main():
 
     # Start keep-alive web server
     await start_web_server()
+
+    # Start FastAPI dashboard API on port 8081 (non-blocking background task)
+    asyncio.create_task(start_dashboard_api())
+    print("[Main] Dashboard API starting on port 8081")
 
     try:
         await signal_loop()

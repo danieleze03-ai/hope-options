@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hope Options Dashboard</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0e1a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #0f1629 0%, #1a2340 100%);
+      border-bottom: 1px solid #1e2d4a;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 14px; }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+
+    .logo span { color: #38bdf8; }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+    }
+
+    .pill-live {
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      color: #4ade80;
+    }
+
+    .pill-offline {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+
+    .pill-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: blink 1.4s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    .wat-clock {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      color: #38bdf8;
+      font-size: 14px;
+    }
+
+    .session-badge {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #7dd3fc;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    /* ── Main layout ── */
+    .main { max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 700px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .stat-card {
+      background: #0f1629;
+      border: 1px solid #1e2d4a;
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #f1f5f9;
+      line-height: 1;
+    }
+
+    .stat-sub {
+      font-size: 12px;
+      color: #475569;
+      margin-top: 5px;
+    }
+
+    .stat-value.green { color: #4ade80; }
+    .stat-value.red   { color: #f87171; }
+    .stat-value.blue  { color: #38bdf8; }
+
+    /* ── Two-column grid ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 750px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    /* ── Panels ── */
+    .panel {
+      background: #0f1629;
+      border: 1px solid #1e2d4a;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid #1e2d4a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #94a3b8;
+    }
+
+    .panel-body { padding: 18px 20px; }
+
+    /* ── Pair selector ── */
+    .pair-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .pair-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #1e2d4a;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .pair-checkbox:hover { border-color: #38bdf8; background: rgba(56,189,248,0.05); }
+
+    .pair-checkbox.checked {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .pair-checkbox input { display: none; }
+
+    .pair-check-box {
+      width: 16px; height: 16px;
+      border-radius: 4px;
+      border: 2px solid #334155;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .pair-checkbox.checked .pair-check-box {
+      background: #38bdf8;
+      border-color: #38bdf8;
+      color: #000;
+    }
+
+    .pair-name { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+
+    .save-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .save-btn:hover { opacity: 0.85; }
+    .save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .save-msg {
+      text-align: center;
+      font-size: 12px;
+      margin-top: 8px;
+      color: #4ade80;
+      min-height: 18px;
+    }
+
+    /* ── Limit control ── */
+    .limit-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #1e2d4a;
+    }
+
+    .limit-label { font-size: 12px; color: #64748b; flex: 1; }
+
+    .limit-input {
+      width: 64px;
+      padding: 7px 10px;
+      background: #0a0e1a;
+      border: 1px solid #1e2d4a;
+      border-radius: 6px;
+      color: #e2e8f0;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .limit-btn {
+      padding: 7px 14px;
+      border-radius: 6px;
+      border: 1px solid #38bdf8;
+      background: transparent;
+      color: #38bdf8;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .limit-btn:hover { background: rgba(56,189,248,0.1); }
+
+    /* ── Confidence bars ── */
+    .confidence-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid #1a2340;
+    }
+
+    .confidence-row:last-child { border-bottom: none; }
+
+    .conf-pair {
+      width: 68px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #e2e8f0;
+      flex-shrink: 0;
+    }
+
+    .conf-dir {
+      width: 42px;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+      text-align: center;
+      padding: 2px 0;
+      border-radius: 4px;
+    }
+
+    .dir-call { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .dir-put  { background: rgba(239,68,68,0.15);  color: #f87171; }
+    .dir-neutral { background: rgba(148,163,184,0.1); color: #64748b; }
+
+    .conf-bar-wrap {
+      flex: 1;
+      height: 6px;
+      background: #1e2d4a;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .conf-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.6s ease;
+    }
+
+    .fill-call    { background: linear-gradient(90deg, #16a34a, #4ade80); }
+    .fill-put     { background: linear-gradient(90deg, #dc2626, #f87171); }
+    .fill-neutral { background: #334155; }
+
+    .conf-score {
+      width: 36px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .conf-aligned {
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    /* ── Signal table ── */
+    .signal-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .signal-table th {
+      text-align: left;
+      padding: 8px 12px;
+      color: #475569;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #1e2d4a;
+    }
+
+    .signal-table td {
+      padding: 11px 12px;
+      border-bottom: 1px solid #111827;
+      color: #cbd5e1;
+    }
+
+    .signal-table tr:last-child td { border-bottom: none; }
+
+    .result-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .badge-win     { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .badge-loss    { background: rgba(239,68,68,0.15);  color: #f87171; }
+    .badge-pending { background: rgba(251,191,36,0.15); color: #fbbf24; }
+
+    .dir-call-text { color: #4ade80; font-weight: 700; }
+    .dir-put-text  { color: #f87171; font-weight: 700; }
+
+    /* ── Empty / loading states ── */
+    .empty-state {
+      text-align: center;
+      padding: 32px 20px;
+      color: #475569;
+      font-size: 13px;
+    }
+
+    .refresh-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #38bdf8;
+      margin-left: 6px;
+      animation: blink 1s ease-in-out infinite;
+    }
+
+    .error-bar {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #f87171;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef } = React;
+
+    // ── All 4 available pairs from config.py ──
+    const ALL_PAIRS = ["EURUSD", "GBPUSD", "USDJPY", "EURJPY"];
+
+    // ── API base — same origin, port 8081 ──
+    const API = window.location.origin.replace(/:\d+$/, "") + ":8081";
+
+    // ── WAT clock ticking locally ──
+    function useWatClock() {
+      const [time, setTime] = useState("");
+      useEffect(() => {
+        const tick = () => {
+          const now = new Date();
+          const wat = new Date(now.getTime() + 60 * 60 * 1000); // UTC+1
+          setTime(wat.toUTCString().slice(17, 22) + " WAT");
+        };
+        tick();
+        const id = setInterval(tick, 1000);
+        return () => clearInterval(id);
+      }, []);
+      return time;
+    }
+
+    // ── Generic fetch hook ──
+    function usePoll(endpoint, intervalMs = 30000) {
+      const [data, setData]   = useState(null);
+      const [error, setError] = useState(null);
+
+      const fetch_ = useCallback(async () => {
+        try {
+          const res = await fetch(`${API}${endpoint}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          setData(json);
+          setError(null);
+        } catch (e) {
+          setError(e.message);
+        }
+      }, [endpoint]);
+
+      useEffect(() => {
+        fetch_();
+        const id = setInterval(fetch_, intervalMs);
+        return () => clearInterval(id);
+      }, [fetch_, intervalMs]);
+
+      return { data, error, refetch: fetch_ };
+    }
+
+    // ================================================================
+    // HEADER
+    // ================================================================
+    function Header({ status }) {
+      const watClock = useWatClock();
+      const alive    = status?.bot_alive ?? false;
+      const session  = status?.session_label;
+      const active   = status?.session_active;
+
+      return (
+        <div className="header">
+          <div className="header-left">
+            <div className="logo">HOPE <span>OPTIONS</span></div>
+            <div className={`status-pill ${alive ? "pill-live" : "pill-offline"}`}>
+              <span className="pill-dot" />
+              {alive ? "LIVE" : "OFFLINE"}
+            </div>
+            {active && session && (
+              <div className="session-badge">{session}</div>
+            )}
+          </div>
+          <div className="header-right">
+            <span className="wat-clock">{watClock}</span>
+            <span style={{color:"#334155"}}>
+              {status?.daily_count ?? "—"} / {status?.daily_limit ?? "—"} signals
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // ================================================================
+    // STATS ROW
+    // ================================================================
+    function StatsRow({ stats, signals }) {
+      const winRate  = stats?.win_rate   ?? "—";
+      const pips     = stats?.total_pips ?? "—";
+      const wins     = stats?.wins       ?? 0;
+      const losses   = stats?.losses     ?? 0;
+      const count    = signals?.count    ?? 0;
+
+      const rateColor = winRate >= 60 ? "green" : winRate >= 40 ? "" : "red";
+      const pipColor  = pips > 0 ? "green" : pips < 0 ? "red" : "";
+
+      return (
+        <div className="stats-row">
+          <div className="stat-card">
+            <div className="stat-label">Signals Today</div>
+            <div className="stat-value blue">{count}</div>
+            <div className="stat-sub">{wins}W · {losses}L</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Win Rate</div>
+            <div className={`stat-value ${rateColor}`}>
+              {winRate === "—" ? "—" : `${winRate}%`}
+            </div>
+            <div className="stat-sub">today</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Total Pips</div>
+            <div className={`stat-value ${pipColor}`}>
+              {pips === "—" ? "—" : (pips > 0 ? `+${pips}` : pips)}
+            </div>
+            <div className="stat-sub">today</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Pending</div>
+            <div className="stat-value">{stats?.pending ?? "—"}</div>
+            <div className="stat-sub">awaiting result</div>
+          </div>
+        </div>
+      );
+    }
+
+    // ================================================================
+    // PAIR SELECTOR + LIMIT CONTROL
+    // ================================================================
+    function PairSelector({ status, onSaved }) {
+      const initial  = status?.active_pairs ?? ["EURUSD", "GBPUSD"];
+      const [selected,  setSelected]  = useState(new Set(initial));
+      const [saving,    setSaving]    = useState(false);
+      const [saveMsg,   setSaveMsg]   = useState("");
+      const [limit,     setLimit]     = useState(status?.daily_limit ?? 4);
+      const [limitMsg,  setLimitMsg]  = useState("");
+
+      // Sync when status first loads
+      useEffect(() => {
+        if (status?.active_pairs) setSelected(new Set(status.active_pairs));
+        if (status?.daily_limit)  setLimit(status.daily_limit);
+      }, [status?.active_pairs?.join(","), status?.daily_limit]);
+
+      const toggle = (pair) => {
+        setSelected(prev => {
+          const next = new Set(prev);
+          next.has(pair) ? next.delete(pair) : next.add(pair);
+          return next;
+        });
+        setSaveMsg("");
+      };
+
+      const savePairs = async () => {
+        if (selected.size === 0) return;
+        setSaving(true);
+        try {
+          const res = await fetch(`${API}/pairs`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pairs: [...selected] })
+          });
+          if (!res.ok) throw new Error();
+          setSaveMsg("✅ Pairs updated");
+          onSaved && onSaved();
+        } catch {
+          setSaveMsg("❌ Failed to save");
+        }
+        setSaving(false);
+        setTimeout(() => setSaveMsg(""), 3000);
+      };
+
+      const saveLimit = async () => {
+        const n = parseInt(limit);
+        if (!n || n < 1) return;
+        try {
+          const res = await fetch(`${API}/limit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ limit: n })
+          });
+          if (!res.ok) throw new Error();
+          setLimitMsg("✅ Saved");
+          onSaved && onSaved();
+        } catch {
+          setLimitMsg("❌ Failed");
+        }
+        setTimeout(() => setLimitMsg(""), 3000);
+      };
+
+      return (
+        <div className="panel">
+          <div className="panel-header">
+            <span className="panel-title">Active Pairs</span>
+          </div>
+          <div className="panel-body">
+            <div className="pair-grid">
+              {ALL_PAIRS.map(pair => {
+                const checked = selected.has(pair);
+                return (
+                  <div
+                    key={pair}
+                    className={`pair-checkbox ${checked ? "checked" : ""}`}
+                    onClick={() => toggle(pair)}
+                  >
+                    <div className="pair-check-box">{checked ? "✓" : ""}</div>
+                    <span className="pair-name">{pair}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <button
+              className="save-btn"
+              onClick={savePairs}
+              disabled={saving || selected.size === 0}
+            >
+              {saving ? "Saving..." : "Save Pairs"}
+            </button>
+            <div className="save-msg">{saveMsg}</div>
+
+            <div className="limit-row">
+              <span className="limit-label">Daily signal limit</span>
+              <input
+                className="limit-input"
+                type="number"
+                min="1"
+                max="20"
+                value={limit}
+                onChange={e => setLimit(e.target.value)}
+              />
+              <button className="limit-btn" onClick={saveLimit}>Set</button>
+              <span style={{fontSize:"11px", color:"#4ade80", minWidth:"50px"}}>{limitMsg}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ================================================================
+    // CONFIDENCE PANEL
+    // ================================================================
+    function ConfidencePanel({ confidence, error }) {
+      if (error) return (
+        <div className="panel">
+          <div className="panel-header">
+            <span className="panel-title">MTF Confidence</span>
+          </div>
+          <div className="panel-body">
+            <div className="error-bar">Failed to load confidence data</div>
+          </div>
+        </div>
+      );
+
+      return (
+        <div className="panel">
+          <div className="panel-header">
+            <span className="panel-title">
+              MTF Confidence
+              <span className="refresh-dot" title="Updates every 30s" />
+            </span>
+          </div>
+          <div className="panel-body">
+            {!confidence && (
+              <div className="empty-state">Loading...</div>
+            )}
+            {confidence && confidence.length === 0 && (
+              <div className="empty-state">No active pairs</div>
+            )}
+            {confidence && confidence.map(row => {
+              const dirClass =
+                row.direction === "CALL"    ? "dir-call" :
+                row.direction === "PUT"     ? "dir-put"  : "dir-neutral";
+              const fillClass =
+                row.direction === "CALL"    ? "fill-call" :
+                row.direction === "PUT"     ? "fill-put"  : "fill-neutral";
+
+              return (
+                <div className="confidence-row" key={row.pair}>
+                  <span className="conf-pair">{row.pair}</span>
+                  <span className={`conf-dir ${dirClass}`}>
+                    {row.direction === "NEUTRAL" ? "—" : row.direction}
+                  </span>
+                  <div className="conf-bar-wrap">
+                    <div
+                      className={`conf-bar-fill ${fillClass}`}
+                      style={{ width: `${row.score}%` }}
+                    />
+                  </div>
+                  <span className="conf-score">{row.score}%</span>
+                  <span className="conf-aligned">
+                    {row.aligned ? "✅" : "❌"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // ================================================================
+    // SIGNAL LOG TABLE
+    // ================================================================
+    function SignalTable({ signals }) {
+      const rows = signals?.signals ?? [];
+
+      return (
+        <div className="panel" style={{marginBottom: "24px"}}>
+          <div className="panel-header">
+            <span className="panel-title">Signal Log — Today</span>
+            <span style={{fontSize:"11px", color:"#334155"}}>
+              {signals?.date ?? "—"}
+            </span>
+          </div>
+          {rows.length === 0 ? (
+            <div className="empty-state">No signals fired today yet</div>
+          ) : (
+            <table className="signal-table">
+              <thead>
+                <tr>
+                  <th>Pair</th>
+                  <th>Dir</th>
+                  <th>Score</th>
+                  <th>Price</th>
+                  <th>Time</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((sig, i) => {
+                  const time = sig.time
+                    ? new Date(sig.time).toLocaleTimeString("en-GB", {
+                        hour: "2-digit", minute: "2-digit", timeZone: "UTC"
+                      }) + " UTC"
+                    : "—";
+                  return (
+                    <tr key={i}>
+                      <td style={{fontWeight:700}}>{sig.pair}</td>
+                      <td className={sig.direction === "CALL" ? "dir-call-text" : "dir-put-text"}>
+                        {sig.direction}
+                      </td>
+                      <td>{sig.score}/100</td>
+                      <td>{sig.price ?? "—"}</td>
+                      <td style={{color:"#64748b"}}>{time}</td>
+                      <td>
+                        <span className={`result-badge badge-${sig.result?.toLowerCase()}`}>
+                          {sig.result}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      );
+    }
+
+    // ================================================================
+    // ROOT APP
+    // ================================================================
+    function App() {
+      const { data: status,     error: statusErr,  refetch: refetchStatus }
+        = usePoll("/status",     10000);  // every 10s
+      const { data: confidence, error: confErr }
+        = usePoll("/confidence", 30000);  // every 30s
+      const { data: signals,    error: signalsErr }
+        = usePoll("/signals",    15000);  // every 15s
+      const { data: stats,      error: statsErr }
+        = usePoll("/stats",      30000);  // every 30s
+
+      const anyError = statusErr || signalsErr || statsErr;
+
+      return (
+        <div>
+          <Header status={status} />
+          <div className="main">
+            {anyError && (
+              <div className="error-bar">
+                ⚠️ Cannot reach API at {API} — make sure the bot is running
+              </div>
+            )}
+            <StatsRow stats={stats} signals={signals} />
+            <div className="grid-2">
+              <PairSelector status={status} onSaved={refetchStatus} />
+              <ConfidencePanel confidence={confidence} error={confErr} />
+            </div>
+            <SignalTable signals={signals} />
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

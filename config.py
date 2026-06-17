@@ -21,7 +21,7 @@ ENTRY_TF    = "1m"
 # Signal settings
 MIN_CONFLUENCE_SCORE  = 75
 MIN_INDICATORS_AGREE  = 4
-MAX_SIGNALS_PER_DAY   = 4
+MAX_SIGNALS_PER_DAY   = 999
 EXPIRY_MINUTES        = 5
 
 # Risk reminder
