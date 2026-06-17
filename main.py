@@ -8,6 +8,7 @@
 import sys
 import os
 import asyncio
+import time
 from datetime import datetime, timezone
 from aiohttp import web
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -99,11 +100,22 @@ async def main():
 
     try:
         await signal_loop()
+    except Exception as e:
+        print(f"[Main] FATAL error in main: {e}")
     finally:
-        await app.updater.stop()
-        await app.stop()
-        await app.shutdown()
+        try:
+            await app.updater.stop()
+            await app.stop()
+            await app.shutdown()
+        except Exception as e:
+            print(f"[Main] Error during shutdown: {e}")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    while True:
+        try:
+            print("[Main] Starting Hope Options...")
+            asyncio.run(main())
+        except Exception as e:
+            print(f"[Main] Process crashed: {e}. Restarting in 10 seconds...")
+            time.sleep(10)
